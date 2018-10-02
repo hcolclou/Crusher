@@ -7,7 +7,7 @@ data Piece = W | B | X | P | Marker Int
 
 -- } /DATA
 
-baseState = [[X]]
+-- TODO: write purposes for functions
 
 -- PIECE FUNCTIONS {
 
