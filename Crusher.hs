@@ -7,8 +7,6 @@ import AI
 
 -- CONSTANTS {
 
-boardsize b = div (length b + 1) 2
-
 yes   = ["y", "yes", "ye"]
 move  = ["m", "mo", "mov", "move"]
 nums  = "0123456789"
@@ -36,7 +34,7 @@ gameover =
 -- TODO: write purposes for functions
 
 -- this constant can be changed to W or B when you want to play against AI
-ai = X
+ai = B
 
 play :: Int -> IO Board
 play n =
@@ -47,7 +45,8 @@ play n =
         if (elem ans yes)
             then do
                 putStrLn rules
-                doturn [] (generate n) W
+                turn <- (doturn [] (generate n) W)
+                return turn
             else do
                 putStrLn "Oh, okay..."
                 return baseState
@@ -57,11 +56,12 @@ doturn visited board p =
     do
         if (ai == p)
             then do
-                doaiturn visited board p
+                nextturn <- (doaiturn visited board p)
+                return nextturn
             else do
-                doplayerturn visited board p
+                nextturn <- (doplayerturn visited board p)
+                return nextturn
 
--- TODO: create AI
 doaiturn :: [Board] -> Board -> Piece -> IO Board
 doaiturn bs (NewBoard board) p =
     do
@@ -71,10 +71,13 @@ doaiturn bs (NewBoard board) p =
                 let newboard = chooseplay bs (NewBoard board) p
                 if (newboard == (NewBoard board))
                     then do
+                        putStrLn "Game over"
                         finalboard <- displaywinner (NewBoard board) p
                         return finalboard
                     else do
-                        doturn ((NewBoard board):bs) newboard (getotherplayer p)
+                        putStrLn "Next turn"
+                        nextboard <- doturn ((NewBoard board):bs) newboard (getotherplayer p)
+                        return nextboard
             else do
                 finalboard <- displaywinner (NewBoard board) p
                 return finalboard
@@ -91,7 +94,7 @@ doplayerturn :: [Board] -> Board -> Piece -> IO Board
 doplayerturn visited (NewBoard board) p =
     do
         putStrLn "Here is the current state:"
-        putStrLn (getdisplaystring board (boardsize board  - 1))
+        putStrLn (getdisplaystring board ((getsize board) - 1))
         let ps = countall board p
         if (ps > 0)
             then do
@@ -99,8 +102,8 @@ doplayerturn visited (NewBoard board) p =
                 putStrLn ("It is " ++ (getdisplaychar p) ++ "'s turn!")
                 putStrLn "Which piece would you like to play?"
                 putStrLn "(select a number on the board)"
-                let (numboard, nummap) = placepiecemarkers board p
-                putStrLn (getdisplaystring numboard (boardsize board - 1))
+                let (numboard, nummap) = placepiecemarkers visited board p
+                putStrLn (getdisplaystring numboard ((getsize board) - 1))
                 input <- getLine
                 let chosenpiece = fixdel input
                 if (all (\ l -> elem l nums) chosenpiece)
@@ -115,7 +118,7 @@ doplayerturn visited (NewBoard board) p =
                 finalboard <- displaywinner (NewBoard board) p
                 return finalboard
 
-doturnmovestomp :: [Board] -> Board -> Piece -> (Int, Int) -> IO Board
+doturnmovestomp :: [Board] -> Board -> Piece -> Point -> IO Board
 doturnmovestomp visited (NewBoard board) p chosen =
     do
         let (y, x) = chosen
@@ -138,13 +141,13 @@ doturnmovestomp visited (NewBoard board) p chosen =
                 newboard <- doturn visited (NewBoard board) p
                 return newboard
 
-doturnmove :: [Board] -> Board -> Piece -> (Int, Int) -> IO Board
+doturnmove :: [Board] -> Board -> Piece -> Point -> IO Board
 doturnmove visited (NewBoard board) p chosen =
     do
-        let size = boardsize board
+        let size = getsize board
         putStrLn "Where would you like to move?"
         putStrLn "(select a number on the board)"
-        let (moves, nummap) = getmoves board size chosen
+        let (moves, nummap) = getmoves visited board chosen
         let newboard = moves
         putStrLn (getdisplaystring (placeusermarker newboard chosen) (size - 1))
         ans <- getLine
@@ -173,13 +176,13 @@ doturnmove visited (NewBoard board) p chosen =
                 return redoboard
         return (NewBoard board)
 
-doturnstomp :: [Board] -> Board -> Piece -> (Int, Int) -> IO Board
+doturnstomp :: [Board] -> Board -> Piece -> Point -> IO Board
 doturnstomp visited (NewBoard board) p chosen =
     do
-        let size = boardsize board
+        let size = getsize board
         putStrLn "Where would you like to stomp?"
         putStrLn "(select a number on the board)"
-        let (stomps, nummap) = getstomps board p size chosen
+        let (stomps, nummap) = getstomps visited board p chosen
         let newboard = stomps
         putStrLn (getdisplaystring (placeusermarker newboard chosen) (size - 1))
         ans <- getLine

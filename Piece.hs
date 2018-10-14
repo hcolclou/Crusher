@@ -2,6 +2,8 @@ module Piece where
 
 -- DATA {
 
+type Point = (Int, Int)
+
 data Piece = W | B | X | P | Marker Int
     deriving (Eq)
 
