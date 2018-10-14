@@ -40,7 +40,9 @@ generatemoves _ _ [] = []
 generatemoves board old (new:t) = (NewBoard (domove board old new)):(generatemoves board old t)
 
 chooseplay :: [Board] -> Board -> Piece -> Board
-chooseplay visited board p = find plays (maximum (getprobs visited plays p)) (getprobs visited plays p)
+chooseplay visited board p
+    | (length plays) == 0 = board
+    | otherwise = find plays (maximum (getprobs visited plays p)) (getprobs visited plays p)
     where plays = generateplayset visited board p
 
 getprobs :: [Board] -> [Board] -> Piece -> [Double]
@@ -48,8 +50,6 @@ getprobs _ [] _ = []
 getprobs visited (h:t) p = (calculateoddssingle visited h p p depth):(getprobs visited t p)
 
 find :: [Board] -> Double -> [Double] -> Board
-find [] _ [] = (NewBoard [[]])
-find (h:t) _ [] = h
 find (h1:t1) m (h2:t2)
     | h2 == m    = h1
     | otherwise  = find t1 m t2
