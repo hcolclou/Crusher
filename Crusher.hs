@@ -12,7 +12,7 @@ move  = ["m", "mo", "mov", "move"]
 nums  = "0123456789"
 -- TODO: write down rules here
 rules = "Rules: \n"
-newturn =
+newTurn =
     "=========================================================\n" ++
     "   #   # #### #   # #######    ####### #   # ###   #   #\n" ++
     "   ##  # #     # #     #          #    #   # #  #  ##  #\n" ++
@@ -20,7 +20,7 @@ newturn =
     "   #  ## #     # #     #          #    #   # #  #  #  ##\n" ++
     "   #   # #### #   #    #          #     ###  #   # #   #\n" ++
     "========================================================="
-gameover =
+gameOver =
     "==========================================================\n" ++
     "    ##     #   #   # ####     ###  #       # #### ###\n" ++
     "   #  #   # #  ## ## #       #   #  #     #  #    #  #\n" ++
@@ -41,85 +41,85 @@ play n =
     do
         putStrLn "Are you ready to play Crusher?"
         input <- getLine
-        let ans = fixdel input
+        let ans = fixDel input
         if (elem ans yes)
             then do
                 putStrLn rules
-                turn <- (doturn [] (generate n) W)
+                turn <- (doTurn [] (generate n) W)
                 return turn
             else do
                 putStrLn "Oh, okay..."
                 return baseState
 
-doturn :: [Board] -> Board -> Piece -> IO Board
-doturn visited board p =
+doTurn :: [Board] -> Board -> Piece -> IO Board
+doTurn visited board p =
     do
         if (ai == p)
             then do
-                nextturn <- (doaiturn visited board p)
-                return nextturn
+                nextTurn <- (doAiTurn visited board p)
+                return nextTurn
             else do
-                nextturn <- (doplayerturn visited board p)
-                return nextturn
+                nextTurn <- (doPlayerTurn visited board p)
+                return nextTurn
 
-doaiturn :: [Board] -> Board -> Piece -> IO Board
-doaiturn bs (NewBoard board) p =
+doAiTurn :: [Board] -> Board -> Piece -> IO Board
+doAiTurn bs board p =
     do
-        let ps = countall board p
+        let ps = countAll board p
         if (ps > 0)
             then do
-                let newboard = chooseplay bs (NewBoard board) p
-                if (newboard == (NewBoard board))
+                let newboard = choosePlay bs board p
+                if (newboard == board)
                     then do
                         putStrLn "Game over"
-                        finalboard <- displaywinner (NewBoard board) p
-                        return finalboard
+                        finalBoard <- displayWinner board p
+                        return finalBoard
                     else do
                         putStrLn "Next turn"
-                        nextboard <- doturn ((NewBoard board):bs) newboard (getotherplayer p)
-                        return nextboard
+                        nextBoard <- doTurn (board:bs) newboard (getOtherPlayer p)
+                        return nextBoard
             else do
-                finalboard <- displaywinner (NewBoard board) p
-                return finalboard
+                finalBoard <- displayWinner board p
+                return finalBoard
 
-displaywinner :: Board -> Piece -> IO Board
-displaywinner board p =
+displayWinner :: Board -> Piece -> IO Board
+displayWinner board p =
     do
-        putStrLn gameover
-        putStrLn ("The winner is " ++ (getdisplaychar (getotherplayer p)) ++ "!")
+        putStrLn gameOver
+        putStrLn ("The winner is " ++ (getDisplayChar (getOtherPlayer p)) ++ "!")
         return board
 
 
-doplayerturn :: [Board] -> Board -> Piece -> IO Board
-doplayerturn visited (NewBoard board) p =
+doPlayerTurn :: [Board] -> Board -> Piece -> IO Board
+doPlayerTurn visited board p =
     do
         putStrLn "Here is the current state:"
-        putStrLn (getdisplaystring board ((getsize board) - 1))
-        let ps = countall board p
+        putStrLn (getDisplayString board ((getSize board) - 1))
+        let ps = countAll board p
         if (ps > 0)
             then do
-                putStrLn newturn
-                putStrLn ("It is " ++ (getdisplaychar p) ++ "'s turn!")
+                putStrLn newTurn
+                putStrLn ("It is " ++ (getDisplayChar p) ++ "'s turn!")
                 putStrLn "Which piece would you like to play?"
                 putStrLn "(select a number on the board)"
-                let (numboard, nummap) = placepiecemarkers visited board p
-                putStrLn (getdisplaystring numboard ((getsize board) - 1))
+                let (numBoard, numMap) = placePieceMarkers visited board p
+                putStrLn (getDisplayString numBoard ((getSize board) - 1))
                 input <- getLine
-                let chosenpiece = fixdel input
-                if (all (\ l -> elem l nums) chosenpiece)
+                let chosenPiece = fixDel input
+                if (all (\ l -> elem l nums) chosenPiece)
                     then do
-                        let ans = numtocoords ((read chosenpiece) :: Int) nummap
-                        doturnmovestomp visited (NewBoard board) p ans
+                        let ans = numToCoords ((read chosenPiece) :: Int) numMap
+                        doTurnMoveStomp visited board p ans
                     else do
                         putStrLn "That is not a number. Restarting turn."
-                        newboard <- doturn visited (NewBoard board) p
-                        return newboard
+                        newBoard <- doTurn visited board p
+                        return newBoard
             else do
-                finalboard <- displaywinner (NewBoard board) p
-                return finalboard
+                finalBoard <- displayWinner board p
+                return finalBoard
 
-doturnmovestomp :: [Board] -> Board -> Piece -> Point -> IO Board
-doturnmovestomp visited (NewBoard board) p chosen =
+doTurnMoveStomp :: [Board] -> Board -> Piece -> Point -> IO Board
+doTurnMoveStomp visited board p chosen =
     do
         let (y, x) = chosen
         if (x >= 0 && y >= 0)
@@ -128,85 +128,85 @@ doturnmovestomp visited (NewBoard board) p chosen =
                 putStrLn "Would you like to move or stomp?"
                 putStrLn "(write 'm' or 's')"
                 input <- getLine
-                let ans = fixdel input
+                let ans = fixDel input
                 if (elem ans move)
                     then do
-                        newboard <- doturnmove visited (NewBoard board) p chosen
-                        return newboard
+                        newBoard <- doTurnMove visited board p chosen
+                        return newBoard
                     else do
-                        newboard <- doturnstomp visited (NewBoard board) p chosen
-                        return newboard
+                        newBoard <- doTurnStomp visited board p chosen
+                        return newBoard
             else do
                 putStrLn "That number is not valid. Restarting turn."
-                newboard <- doturn visited (NewBoard board) p
-                return newboard
+                newBoard <- doTurn visited board p
+                return newBoard
 
-doturnmove :: [Board] -> Board -> Piece -> Point -> IO Board
-doturnmove visited (NewBoard board) p chosen =
+doTurnMove :: [Board] -> Board -> Piece -> Point -> IO Board
+doTurnMove visited board p chosen =
     do
-        let size = getsize board
+        let size = getSize board
         putStrLn "Where would you like to move?"
         putStrLn "(select a number on the board)"
-        let (moves, nummap) = getmoves visited board chosen
-        let newboard = moves
-        putStrLn (getdisplaystring (placeusermarker newboard chosen) (size - 1))
+        let (moves, numMap) = getMoves visited board chosen
+        let newBoard = moves
+        putStrLn (getDisplayString (placeUserMarker newBoard chosen) (size - 1))
         ans <- getLine
-        let choice = fixdel ans
+        let choice = fixDel ans
         if (all (\ l -> elem l nums) choice)
             then do
                 let choiceInt = (read choice) :: Int
-                if (choiceInt < 0 || choiceInt > length nummap)
+                if (choiceInt < 0 || choiceInt > length numMap)
                     then do
                         putStrLn "That is not a valid number. Restarting turn."
-                        redoboard <- doturn visited (NewBoard board) p
-                        return redoboard
+                        redoBoard <- doTurn visited board p
+                        return redoBoard
                     else do
-                        let newpos = numtocoords choiceInt nummap
-                        let newboard = domove board chosen newpos
-                        if (elem (NewBoard newboard) visited)
+                        let newPos = numToCoords choiceInt numMap
+                        let newBoard = doMove board chosen newPos
+                        if (elem newBoard visited)
                             then do
                                 putStrLn "This board has already existed. Choose another one."
-                                redoboard <- doturn visited (NewBoard board) p
-                                return redoboard
+                                redoBoard <- doTurn visited board p
+                                return redoBoard
                             else do
-                                nextboard <- doturn ((NewBoard board):visited) (NewBoard newboard) (getotherplayer p)
-                                return nextboard
+                                nextBoard <- doTurn (board:visited) newBoard (getOtherPlayer p)
+                                return nextBoard
             else do
-                redoboard <- doturnmove visited (NewBoard board) p chosen
-                return redoboard
-        return (NewBoard board)
+                redoBoard <- doTurnMove visited board p chosen
+                return redoBoard
+        return board
 
-doturnstomp :: [Board] -> Board -> Piece -> Point -> IO Board
-doturnstomp visited (NewBoard board) p chosen =
+doTurnStomp :: [Board] -> Board -> Piece -> Point -> IO Board
+doTurnStomp visited board p chosen =
     do
-        let size = getsize board
+        let size = getSize board
         putStrLn "Where would you like to stomp?"
         putStrLn "(select a number on the board)"
-        let (stomps, nummap) = getstomps visited board p chosen
-        let newboard = stomps
-        putStrLn (getdisplaystring (placeusermarker newboard chosen) (size - 1))
+        let (stomps, numMap) = getStomps visited board p chosen
+        let newBoard = stomps
+        putStrLn (getDisplayString (placeUserMarker newBoard chosen) (size - 1))
         ans <- getLine
-        let choice = fixdel ans
+        let choice = fixDel ans
         if (all (\ l -> elem l nums) choice)
             then do
                 let choiceInt = (read choice) :: Int
-                if (choiceInt < 0 || choiceInt > length nummap)
+                if (choiceInt < 0 || choiceInt > length numMap)
                     then do
                         putStrLn "That is not a valid number. Restarting turn."
-                        redoboard <- doturn visited (NewBoard board) p
-                        return redoboard
+                        redoBoard <- doTurn visited board p
+                        return redoBoard
                     else do
-                        let newpos = numtocoords choiceInt nummap
-                        let newboard = domove board chosen newpos
-                        if (elem (NewBoard newboard) visited)
+                        let newPos = numToCoords choiceInt numMap
+                        let newBoard = doMove board chosen newPos
+                        if (elem newBoard visited)
                             then do
                                 putStrLn "This board has already existed. Choose another one."
-                                redoboard <- doturn visited (NewBoard board) p
-                                return redoboard
+                                redoBoard <- doTurn visited board p
+                                return redoBoard
                             else do
-                                nextboard <- doturn ((NewBoard board):visited) (NewBoard newboard) (getotherplayer p)
-                                return nextboard
+                                nextBoard <- doTurn (board:visited) newBoard (getOtherPlayer p)
+                                return nextBoard
             else do
-                redoboard <- doturnmove visited (NewBoard board) p chosen
-                return redoboard
-        return (NewBoard board)
+                redoBoard <- doTurnMove visited board p chosen
+                return redoBoard
+        return board
