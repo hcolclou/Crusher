@@ -31,10 +31,8 @@ gameOver =
 
 -- } /CONSTANTS
 
--- TODO: write purposes for functions
-
 -- this constant can be changed to W or B when you want to play against AI
-ai = B
+ai = [W, B]
 
 play :: Int -> IO Board
 play n =
@@ -54,7 +52,7 @@ play n =
 doTurn :: [Board] -> Board -> Piece -> IO Board
 doTurn visited board p =
     do
-        if (ai == p)
+        if (elem p ai)
             then do
                 nextTurn <- (doAiTurn visited board p)
                 return nextTurn
@@ -65,6 +63,8 @@ doTurn visited board p =
 doAiTurn :: [Board] -> Board -> Piece -> IO Board
 doAiTurn bs board p =
     do
+        putStrLn "Here is the current state:"
+        putStrLn (getDisplayString board ((getSize board) - 1))
         let ps = countAll board p
         if (ps > 0)
             then do

@@ -6,10 +6,8 @@ import Piece
 import Util
 import Control.Parallel
 
-depth = 3
-parallel = True
-posMult = 1.5
-negMult = -1.0
+depth     = 3
+parallel  = True
 
 {-
 calculateValue is a function that takes a Board and a Piece and evaluates the
@@ -19,12 +17,8 @@ that represents how good the situation is.
 @param me    The piece to evaluate the board for.
 -}
 calculateValue :: Board -> Piece -> Double
-calculateValue board me
-    | x == 0    = 0
-    | sign > 0  = posMult*(sqrt (x / (1.0 + x)))
-    | otherwise = negMult*(sqrt (x / (1.0 + x)))
-    where x = fromIntegral (abs ((countAll board me) - (countAll board (getOtherPlayer me))))
-          sign = (x / (sqrt (x * x)))
+calculateValue board me =
+    fromIntegral ((countAll board me) - (countAll board (getOtherPlayer me)))
 
 {-
 calculateOddsSingle takes a list of Boards, a Board, two Pieces, and an Int and
@@ -38,10 +32,10 @@ of the possible moves from this state.
 -}
 calculateOddsSingle :: [Board] -> Board -> Piece -> Piece -> Int -> Double
 calculateOddsSingle visited board me curr depth
-    | countAll board curr == 0 = if curr == me then negMult else posMult
-    | plays == [] = if curr == me then negMult else posMult
-    | depth == 0 = calculateValue board me
-    | otherwise = (calculateOddsMult (board:visited) plays me (getOtherPlayer curr) depth) / (fromIntegral (length plays))
+    | countAll board curr == 0 || plays == [] || depth == 0 =
+        (fromIntegral depth + 1.0) * (calculateValue board me)
+    | otherwise =
+        (calculateOddsMult (board:visited) plays me (getOtherPlayer curr) depth)
     where plays = generatePlayset visited board curr
 
 {-
