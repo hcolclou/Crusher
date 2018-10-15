@@ -13,23 +13,28 @@ type Point = (Int, Int)
 
 {-
 Returns the opponent to the player given.
+@param p The player to find the opponent for.
 -}
 getOtherPlayer :: Piece -> Piece
 getOtherPlayer W = B
 getOtherPlayer B = W
-getOtherPlayer _ = X
+getOtherPlayer p = X
 
 {-
 Counts the number of Piece p in a list of a list of pieces.
+@param (h:t) The board to count pieces on.
+@param p     The piece type to count.
 -}
-countAll :: [[Piece]] -> Piece -> Int
+countAll :: Board -> Piece -> Int
 countAll [] _ = 0
 countAll (h:t) p = (count h p) + (countAll t p)
 
 {-
 Counts the number of Piece p in a list of pieces.
+@param (h:t) The row to count pieces on.
+@param p     The piece type to count.
 -}
-count :: [Piece] -> Piece -> Int
+count :: Row -> Piece -> Int
 count [] _ = 0
 count (h:t) p
     | h == p    = 1 + count t p
@@ -37,6 +42,7 @@ count (h:t) p
 
 {-
 Describes how to display each type of Piece as a string.
+@param p The piece type to get the display string for.
 -}
 getDisplayChar :: Piece -> String
 getDisplayChar X = "-"

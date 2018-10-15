@@ -11,15 +11,18 @@ delChar = "\DEL"
 
 {-
 A wrapper for a function which handles deletions.
+@param str The string to parse for \DEL.
 -}
 fixDel :: String -> String
 fixDel str = fixDelper [] str
 
 {-
 Removes all delete characters and the characters that they were meant to delete.
+@param acc The accumulated string so far.
+@param str The string that is yet to be parsed.
 -}
 fixDelper :: String -> String -> String
-fixDelper []  str
+fixDelper [] str
     | prefix delChar str    = fixDelper [] (removeStr (length delChar) str)
     | contains delChar str  = fixDelper [head str] (tail str)
     | otherwise             = str
@@ -31,6 +34,8 @@ fixDelper acc str
 
 {-
 Returns true if the second string contains the first string.
+@param s1 The string that is being searched for.
+@param s2 The string that is being searched.
 -}
 contains :: String -> String -> Bool
 contains (h:t) []           = False
@@ -42,6 +47,8 @@ contains s1    s2
 {-
 Returns true if the first part of the second string is equal to the first
 string.
+@param (h1:t1) The string to search for as a prefix.
+@param (h2:t2) The string to search in.
 -}
 prefix :: String -> String -> Bool
 prefix []      _       = True
@@ -50,6 +57,8 @@ prefix (h1:t1) (h2:t2) = (h1 == h2) && prefix t1 t2
 
 {-
 Removes the first n characters of a string.
+@param n       The number of characters to remove from a string.
+@param (h2:t2) The string to delete characters from.
 -}
 removeStr :: Int -> String -> String
 removeStr 0 str     = str
@@ -59,6 +68,8 @@ removeStr n (h2:t2) = removeStr (n - 1) t2
 {-
 Takes an int and a list of Points and returns the point at position n where n
 is 1-based.
+@param n    The index of the desired point.
+@param list The list of points to take from.
 -}
 numToCoords :: Int -> [Point] -> Point
 numToCoords _ [] = (-1, -1)
@@ -68,6 +79,9 @@ numToCoords n list
 
 {-
 Returns a list of Points that describe all the locations of Piece p.
+@param (h:t)  The board to get coordinates from.
+@param p      The piece type to get coordinates of.
+@param (y, x) The current point in the board.
 -}
 getCoords :: Board -> Piece -> Point -> [Point]
 getCoords [] _ _ = []
@@ -76,6 +90,9 @@ getCoords (h:t) p (y, _) = (getCoordsHelper h p (y, 0)) ++ (getCoords t p (y + 1
 {-
 Helper function for getCoords that gets the coords when it's already on the
 right row.
+@param (h:t)  The row to get coordinates from.
+@param p      The piece type to get coordinates of.
+@param (y, x) The current point on the board.
 -}
 getCoordsHelper :: Row -> Piece -> Point -> [Point]
 getCoordsHelper [] _ _ = []
@@ -85,6 +102,8 @@ getCoordsHelper (h:t) p (y, x)
 
 {-
 getPos takes a Board and a Point and returns the Piece type at that Point.
+@param (h:t)  The board to get the piece from.
+@param (y, x) The current point on the board.
 -}
 getPos :: Board -> Point -> Piece
 getPos [] p = P
@@ -95,6 +114,8 @@ getPos (h:t) (y, x)
 {-
 getPosHelper is a helper function for getPos that takes a Row and a Point and
 returns the Piece at that Point.
+@param (h:t) The row to get the piece from.
+@param x     The current point in the row.
 -}
 getPosHelper :: Row -> Int -> Piece
 getPosHelper [] x = P
@@ -105,6 +126,9 @@ getPosHelper (h:t) x
 {-
 setPos takes a Board, a Point, and a Piece and returns a new Board with the
 Piece at Point changed to the given Piece.
+@param (h:t)  The board to change.
+@param (y, x) The position to change.
+@param p      The piece type to change to.
 -}
 setPos :: Board -> Point -> Piece -> Board
 setPos [] x p = []
@@ -116,6 +140,9 @@ setPos (h:t) (y, x) p
 setPosHelper is a helper function for setPos that takes a Row, an Int, and a
 Piece and returns a new Row with the Piece at the given Int changed to the
 given Piece.
+@param (h:t) The row to change.
+@param x     The position to change.
+@param p     The piece type to change to.
 -}
 setPosHelper :: Row -> Int -> Piece -> Row
 setPosHelper [] x p = []

@@ -15,6 +15,8 @@ negMult = -1.0
 calculateValue is a function that takes a Board and a Piece and evaluates the
 board from that Piece's side, returning a Double between negMult and posMult
 that represents how good the situation is.
+@param board The board to calculate a value for.
+@param me    The piece to evaluate the board for.
 -}
 calculateValue :: Board -> Piece -> Double
 calculateValue board me
@@ -28,6 +30,11 @@ calculateValue board me
 calculateOddsSingle takes a list of Boards, a Board, two Pieces, and an Int and
 calculates the value of this state by taking the average of each value from each
 of the possible moves from this state.
+@param visited The list of boards that have already occured.
+@param board   The board to calculate a value for.
+@param me      The piece type of the AI.
+@param curr    The piece type of the current player.
+@param depth   The depth that the calculations have yet to go.
 -}
 calculateOddsSingle :: [Board] -> Board -> Piece -> Piece -> Int -> Double
 calculateOddsSingle visited board me curr depth
@@ -40,6 +47,11 @@ calculateOddsSingle visited board me curr depth
 {-
 calculateOddsMult calculates the average value for each Board in its second list
 of Boards.
+@param visited The list of boards that have already occured.
+@param (h:t)   The list of boards to calculate values for.
+@param me      The piece type of the AI.
+@param curr    The piece type of the current player.
+@param depth   The depth that the calculations have yet to go.
 -}
 calculateOddsMult :: [Board] -> [Board] -> Piece -> Piece -> Int -> Double
 calculateOddsMult _ [] _ _ _ = 0.0
@@ -52,6 +64,9 @@ calculateOddsMult visited (h:t) me curr depth
 {-
 generatePlayset takes a list of Boards, a Board, and a Piece and generates a
 list of all the possible moves that the player with type Piece can make.
+@param visited The list of boards that have already occured.
+@param board   The current board.
+@param p       The piece type to generate moves for.
 -}
 generatePlayset :: [Board] -> Board -> Piece -> [Board]
 generatePlayset visited board p = generatePlaysetHelp visited board pieces p
@@ -60,6 +75,10 @@ generatePlayset visited board p = generatePlaysetHelp visited board pieces p
 {-
 generatePlaysetHelp takes a list of Boards, a Board, a list of Points, and a
 Piece and generates all the possible moves for a Piece at each Point.
+@param visited The list of boards that have already occured.
+@param board   The current board.
+@param (h:t)   The list of coordinates of pieces to generate moves for.
+@param p       The piece type to generate moves for.
 -}
 generatePlaysetHelp :: [Board] -> Board -> [Point] -> Piece -> [Board]
 generatePlaysetHelp _ _ [] _ = []
@@ -73,6 +92,9 @@ generatePlaysetHelp visited board (h:t) p = single ++ rest
 generateMoves takes a Board, a Point, and List of Points and it generates a list
 of all the boards that can be made from moving the first Point to the Points ins
 the list.
+@param board   The current board.
+@param old     The old position of a piece.
+@param (new:t) The list of coordinates to get moves to.
 -}
 generateMoves :: Board -> Point -> [Point] -> [Board]
 generateMoves _ _ [] = []
@@ -82,6 +104,9 @@ generateMoves board old (new:t) = (doMove board old new):(generateMoves board ol
 choosePlay is the main function in AI, it takes a list of Boards, a Board, a
 Piece, and returns a new Board which is the move that it calculated to have the
 best odds for the given Piece to win.
+@param visited The list of boards that have already occured.
+@param board   The current board.
+@param p       The AI's piece type.
 -}
 choosePlay :: [Board] -> Board -> Piece -> Board
 choosePlay visited board p
@@ -93,6 +118,9 @@ choosePlay visited board p
 {-
 getProbs takes two lists of Boards and a Piece and gets a list of all the odds
 associated with each possible move it can make.
+@param visited The list of baords that have already occured.
+@param (h:t)   The list of boards to calculate odds for.
+@param p       The AI's piece type.
 -}
 getProbs :: [Board] -> [Board] -> Piece -> [Double]
 getProbs _ [] _ = []
@@ -103,6 +131,9 @@ getProbs visited (h:t) p = single:rest
 {-
 find takes a list of Boards, a Double, and a list of Doubles and returns the
 Board associated with the given Double.
+@param (h1:t1) The list of boards to go through.
+@param m       The maximum value to search for.
+@param (h2:t2) The list of odds that correspond to the boards.
 -}
 find :: [Board] -> Double -> [Double] -> Board
 find (h1:t1) m (h2:t2)
