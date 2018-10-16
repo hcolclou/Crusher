@@ -1,13 +1,44 @@
-module AI (choosePlay, aiTests) where
+module AI (Brain, remember, choosePlay, aiTests) where
 
 import Test.HUnit
 import CrusherBoard
 import Piece
 import Util
 import Control.Parallel
+import Data.Hashable
+import Data.Map as Map
 
-depth     = 3
+depth     = 1
 parallel  = True
+
+type Brain = Map Int Int
+
+remember :: Brain -> [Board] -> Piece -> IO Brain
+remember brain [] _ = return brain
+remember brain (h:t) winner =
+    do
+        if (member boardHash brain)
+            then do
+                if (winner == W)
+                    then do
+                        let newBrain = insert boardHash ((brain ! boardHash) + 1) brain
+                        newBrain <- (remember newBrain t winner)
+                        return newBrain
+                    else do
+                        let newBrain = insert boardHash ((brain ! boardHash) - 1) brain
+                        newBrain <- (remember newBrain t winner)
+                        return newBrain
+            else do
+                if (winner == W)
+                    then do
+                        let newBrain = insert boardHash 1 brain
+                        newBrain <- (remember newBrain t winner)
+                        return newBrain
+                    else do
+                        let newBrain = insert boardHash (-1) brain
+                        newBrain <- (remember newBrain t winner)
+                        return newBrain
+    where boardHash = hash (getDisplayString h (getSize h - 1))
 
 {-
 calculateValue is a function that takes a Board and a Piece and evaluates the
@@ -16,9 +47,15 @@ that represents how good the situation is.
 @param board The board to calculate a value for.
 @param me    The piece to evaluate the board for.
 -}
-calculateValue :: Board -> Piece -> Double
-calculateValue board me =
-    fromIntegral ((countAll board me) - (countAll board (getOtherPlayer me)))
+calculateValue :: Brain -> Board -> Piece -> Double
+calculateValue brain board me
+    | member boardHash brain && me == W =
+        fromIntegral (currSum + (brain ! boardHash))
+    | member boardHash brain && me == B =
+        fromIntegral (currSum - (brain ! boardHash))
+    | otherwise = fromIntegral currSum
+    where boardHash = hash (getDisplayString board (getSize board - 1))
+          currSum = (countAll board me) - (countAll board (getOtherPlayer me))
 
 {-
 calculateOddsSingle takes a list of Boards, a Board, two Pieces, and an Int and
@@ -30,12 +67,12 @@ of the possible moves from this state.
 @param curr    The piece type of the current player.
 @param depth   The depth that the calculations have yet to go.
 -}
-calculateOddsSingle :: [Board] -> Board -> Piece -> Piece -> Int -> Double
-calculateOddsSingle visited board me curr depth
+calculateOddsSingle :: Brain -> [Board] -> Board -> Piece -> Piece -> Int -> Double
+calculateOddsSingle brain visited board me curr depth
     | countAll board curr == 0 || plays == [] || depth == 0 =
-        (fromIntegral depth + 1.0) * (calculateValue board me)
+        (fromIntegral depth + 1.0) * (calculateValue brain board me)
     | otherwise =
-        (calculateOddsMult (board:visited) plays me (getOtherPlayer curr) depth)
+        (calculateOddsMult brain (board:visited) plays me (getOtherPlayer curr) depth)
     where plays = generatePlayset visited board curr
 
 {-
@@ -47,13 +84,13 @@ of Boards.
 @param curr    The piece type of the current player.
 @param depth   The depth that the calculations have yet to go.
 -}
-calculateOddsMult :: [Board] -> [Board] -> Piece -> Piece -> Int -> Double
-calculateOddsMult _ [] _ _ _ = 0.0
-calculateOddsMult visited (h:t) me curr depth
+calculateOddsMult :: Brain -> [Board] -> [Board] -> Piece -> Piece -> Int -> Double
+calculateOddsMult _ _ [] _ _ _ = 0.0
+calculateOddsMult brain visited (h:t) me curr depth
     | parallel  = par p1 (pseq p2 (p1 + p2))
     | otherwise = p1 + p2
-    where p1 = calculateOddsSingle visited h me curr (depth - 1)
-          p2 = calculateOddsMult visited t me curr depth
+    where p1 = calculateOddsSingle brain visited h me curr (depth - 1)
+          p2 = calculateOddsMult brain visited t me curr depth
 
 {-
 generatePlayset takes a list of Boards, a Board, and a Piece and generates a
@@ -102,12 +139,12 @@ best odds for the given Piece to win.
 @param board   The current board.
 @param p       The AI's piece type.
 -}
-choosePlay :: [Board] -> Board -> Piece -> Board
-choosePlay visited board p
+choosePlay :: Brain -> [Board] -> Board -> Piece -> Board
+choosePlay brain visited board p
     | (length plays) == 0 = board
     | otherwise = find plays (maximum probs) probs
     where plays = generatePlayset visited board p
-          probs = getProbs visited plays p
+          probs = getProbs brain visited plays p
 
 {-
 getProbs takes two lists of Boards and a Piece and gets a list of all the odds
@@ -116,11 +153,11 @@ associated with each possible move it can make.
 @param (h:t)   The list of boards to calculate odds for.
 @param p       The AI's piece type.
 -}
-getProbs :: [Board] -> [Board] -> Piece -> [Double]
-getProbs _ [] _ = []
-getProbs visited (h:t) p = single:rest
-    where single = calculateOddsSingle visited h p p depth
-          rest = getProbs visited t p
+getProbs :: Brain -> [Board] -> [Board] -> Piece -> [Double]
+getProbs _ _ [] _ = []
+getProbs brain visited (h:t) p = single:rest
+    where single = calculateOddsSingle brain visited h p p depth
+          rest = getProbs brain visited t p
 
 {-
 find takes a list of Boards, a Double, and a list of Doubles and returns the
