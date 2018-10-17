@@ -9,7 +9,21 @@ yes   = ["y", "yes", "ye"]
 move  = ["m", "mo", "mov", "move"]
 nums  = "0123456789"
 -- TODO: write down rules here
-rules = "Rules: \n"
+rules = "Rules: \n" ++
+    "    - \'W\' goes first. \n" ++
+    "    - On each turn, the player may choose a piece to play. \n" ++
+    "    - A piece can 'move' or 'stomp'. \n" ++
+    "        - A 'move' means the piece will move to a space within 1 of it" ++
+    " that is not occupied by another piece of either type. \n" ++
+    "        - A 'stomp' means the piece will stomp to a space at a distance" ++
+    " of 2 away from it that is not occupied by another piece of the same " ++
+    "type. \n" ++
+    "    - No board can exist twice. \n" ++
+    "    - Entering an invalid input will reset the turn. \n \n" ++
+    "Win conditions: \n" ++
+    "    - If every play a player can make leads to a board that has already" ++
+    " existed, that player loses. \n" ++
+    "    - If a player has no pieces remaining, that player loses. \n"
 newTurn =
     "=========================================================\n" ++
     "   #   # #### #   # #######    ####### #   # ###   #   #\n" ++
@@ -34,11 +48,13 @@ play :: Brain -> Int -> IO Brain
 play brain n =
     do
         putStrLn "Are you ready to play Crusher?"
+        putStrLn "(type 'y', 'ye', or 'yes' for yes or anything else for no)"
         input <- getLine
         let ans = fixDel input
         if (elem ans yes)
             then do
                 putStrLn rules
+                putStrLn newTurn
                 turn <- doTurn brain [] (generate n) W
                 return turn
             else do
@@ -96,7 +112,6 @@ doPlayerTurn brain visited board p =
         let ps = countAll board p
         if (ps > 0)
             then do
-                putStrLn newTurn
                 putStrLn ("It is " ++ (getDisplayChar p) ++ "'s turn!")
                 putStrLn "Which piece would you like to play?"
                 putStrLn "(select a number on the board)"
@@ -125,7 +140,7 @@ doTurnMoveStomp brain visited board p chosen =
             then do
                 putStrLn "You have selected a piece."
                 putStrLn "Would you like to move or stomp?"
-                putStrLn "(write 'm' or 's')"
+                putStrLn "(write 'm', 'mo', 'move', or 'move' for move or anything else for stomp)"
                 input <- getLine
                 let ans = fixDel input
                 if (elem ans move)
@@ -168,6 +183,7 @@ doTurnMove brain visited board p chosen =
                                 redoBrain <- doTurn brain visited board p
                                 return redoBrain
                             else do
+                                putStrLn newTurn
                                 nextBrain <- doTurn brain (board:visited) newBrain (getOtherPlayer p)
                                 return nextBrain
             else do
@@ -195,14 +211,15 @@ doTurnStomp brain visited board p chosen =
                         return redoBrain
                     else do
                         let newPos = numToCoords choiceInt numMap
-                        let newBrain = doMove board chosen newPos
+                        let newBoard = doMove board chosen newPos
                         if (elem newBrain visited)
                             then do
                                 putStrLn "This board has already existed. Choose another one."
                                 redoBrain <- doTurn brain visited board p
                                 return redoBrain
                             else do
-                                nextBrain <- doTurn brain (board:visited) newBrain (getOtherPlayer p)
+                                putStrLn newTurn
+                                nextBrain <- doTurn brain (board:visited) newBoard (getOtherPlayer p)
                                 return nextBrain
             else do
                 redoBrain <- doTurnMove brain visited board p chosen

@@ -13,6 +13,15 @@ parallel  = True
 
 type Brain = Map Int Int
 
+{-
+remember takes a Brain, a list of Boards, and a Piece and if the Piece is W,
+it adds one to the value corresponding to each Board in the list (making new
+ones if they don't exist). If the Piece is B it does the same except it
+subtracts one from each value.
+@param brain  The old brain to update.
+@param (h:t)  The list of boards to edit the value in the brain for.
+@param winner The piece that won.
+-}
 remember :: Brain -> [Board] -> Piece -> IO Brain
 remember brain [] _ = return brain
 remember brain (h:t) winner =
