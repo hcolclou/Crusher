@@ -1,6 +1,9 @@
 module AI (Brain, remember, choosePlay, aiTests) where
 
 import Test.HUnit
+import Test.QuickCheck
+import Data.List
+
 import CrusherBoard
 import Piece
 import Util
@@ -181,4 +184,59 @@ find (h1:t1) m (h2:t2)
     | otherwise  = find t1 m t2
 
 -- AI Tests
-aiTests = TestList []
+aiTests = TestList [cTests, gTests, aiTests]
+
+cTests = TestList [
+        TestLabel "calculateOddsMult Test 1" comTestEmpty,
+        TestLabel "calculateOddsMult Test 2" comTestSingle,
+        TestLabel "calculateOddsSingle Test 1" cosTestAI,
+        TestLabel "calculateOddsSingle Test 2" cosTestPl,
+        TestLabel "calculateValue Test 1" cvTestWW,
+        TestLabel "calculateValue Test 2" cvTestWL,
+        TestLabel "calculateValue Test 3" cvTestBW,
+        TestLabel "calculateValue Test 4" cvTestBL
+]
+
+comTestEmpty = TestCase(assertEqual "for (calculateOddsMult _ _ [] _ _ _), " 0.0 (calculateOddsMult brain0 [] [] W B 1))
+comTestSingle = TestCase(assertEqual "for (calculateOddsMult brain0 [w] [W] W B 1), " 1.0 (calculateOddsMult brain0 [w] [W] W B 1))
+cosTestAI = TestCase(assertEqual "for (calculateOddsSingle brain0 [] [[W]] W B 1), " 1.0 (calculateOddsSingle brain0 [] [[W]] W B 1))
+cosTestPl = TestCase(assertEqual "for (calculateOddsSingle brain0 [] [[W]] B W 1), " 0.0 (calculateOddsSingle brain0 [] [[W]] B W 1))
+cvTestWW = TestCase(assertEqual "for (calculateValue brain0 [[W]] W), " 1.0 (calculateValue brain0 [[W]] W))
+cvTestWL = TestCase(assertEqual "for (calculateValue brain0 [[W]] W), " 0.0 (calculateValue brain0 [[B]] B))
+cvTestBW = TestCase(assertEqual "for (calculateValue brain0 [[W]] W), " 1.0 (calculateValue brain0 [[B]] B))
+cvTestBL = TestCase(assertEqual "for (calculateValue brain0 [[W]] W), " 0.0 (calculateValue brain0 [[W]] W))
+
+
+gTests = TestList [
+    TestLabel "generatePlayset Test 1" gpTestEmptyW,
+    TestLabel "generatePlayset Test 2" gpTestEmptyB,
+    TestLabel "generatePlayset Test 3" gpTestEmptyWL,
+    TestLabel "generatePlayset Test 4" gpTestEmptyBL,
+    TestLabel "generatePlayset Test 5" gpTestSingleW,
+    TestLabel "generatePlayset Test 6" gpTestSingleB
+]
+
+gpTestEmptyW = TestCase(assertEqual "for (generatePlayset [] [[W]] W), " [] (generatePlayset [] [[W]] W))
+gpTestEmptyB = TestCase(assertEqual "for (generatePlayset [] [[B]] B), " [] (generatePlayset [] [[B]] B))
+gpTestEmptyWL = TestCase(assertEqual "for (generatePlayset [] [[B]] B), " [] (generatePlayset [] [[B]] B))
+gpTestEmptyBL = TestCase(assertEqual "for (generatePlayset [] [[W]] W), " [] (generatePlayset [] [[W]] W))
+gpTestSingleW = TestCase(assertEqual "for (generatePlayset [] [[W, X]] W), " [[[X, W]]] (generatePlayset [] [[W, X]] W))
+gpTestSingleB = TestCase(assertEqual "for (generatePlayset [] [[B, X]] B), " [[[X, B]]] (generatePlayset [] [[B, X]] B))
+
+aiTests = TestList [
+    TestLabel "choosePlay Test 1" cpTestWW,
+    TestLabel "choosePlay Test 2" cpTestBW,
+    TestLabel "getProbs Test 1" gpbTestWW,
+    TestLabel "getProbs Test 2" gpbTestBW,
+    TestLabel "getProbs Test 3" gpbTestWL,
+    TestLabel "getProbs Test 4" gpbTestBL
+    TestLabel "find Test 1" fTest0
+]
+
+cpTestWW = TestCase(assertEqual "for (choosePlay [] [[W, B]] W), " [[X, W]] (choosePlay [] [[W, B]] W))
+cpTestBW = TestCase(assertEqual "for (choosePlay [] [[W, B]] B), " [[B, X]] (choosePlay [] [[W, B]] B))
+gpbTestWW = TestCase(assertEqual "for (getProbs [] [[W, B]] W), " [1.0] (getProbs [] [[W, B]] W))
+gpbTestBW = TestCase(assertEqual "for (getProbs [] [[W, B]] B), " [1.0] (getProbs [] [[W, B]] B))
+gpbTestWL = TestCase(assertEqual "for (getProbs [] [[W, B, B]] W), " [0.0] (getProbs [] [[W, B, B]] W))
+gpbTestBL = TestCase(assertEqual "for (getProbs [] [[W, W, B]] B), " [0.0] (getProbs [] [[W, B, B]] B))
+fTest0 = TestCase(assertEqual "for (find [[[]], [[W, W, B]]] 1.0 [0.0, 1.0]), " [[W, W, B]] (find [[[]], [[W, W, B]]] 1.0 [0.0, 1.0]))
