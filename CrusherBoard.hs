@@ -291,6 +291,7 @@ gTests = TestList [
     TestLabel "generate test 1" gTestBase,
     TestLabel "generate test 2" gTestMore
     ]
+
 gTestBase = TestCase (assertEqual "for (generate 1)," baseState (generate 1))
 gTestMore = TestCase (assertEqual "for (generate 3),"
     [[W, W, W], [X, W, W, X], [X, X, X, X, X], [X, B, B, X], [B, B, B]] (generate 3))
@@ -307,8 +308,6 @@ ebhTests = TestList [
 
 ebhTestEmpty = TestCase (assertEqual "for (expandBoardHelper [[X]] 1)," [[W,W],[X,X,X],[B,B]] (expandBoardHelper [[X]] 2))
 
-
-
 elTests = TestList [
     TestLabel "extendLines test 1" ebhTestBase,
     TestLabel "extendLines test 2" ebhTestHigher
@@ -318,26 +317,57 @@ ebhTestBase = TestCase (assertEqual "for (extendLines [[X]])," [[X, X, X]] (exte
 ebhTestHigher = TestCase (assertEqual "for (extendLines [[X], [X, X, X], [X]]),"
     [[X, X, X], [X, X, X, X, X], [X, X, X]] (extendLines [[X], [X, X, X], [X]]))
 
-
-
 pumTests = TestList [
     TestLabel "placeUserMarker test 1" pumTestBase
     ]
 
 pumTestBase = TestCase (assertEqual "for (placeUserMarker [[W]] (0,0))," [[P]] (placeUserMarker [[W]] (0,0)))
 
-ppmTests = TestList []
+ppmTests = TestList [
+    TestLabel "placePieceMarkers test 1" ppmTestBase,
+    TestLabel "placePieceMarkers test 2" ppmTestWhite,
+    TestLabel "placePieceMarkers test 3" ppmTestBlack
+    ]
 
-ppmhTests = TestList []
-ppmlTests = TestList []
+ppmTestBase  = TestCase (assertEqual "for (placePieceMarkers [] [] W),"
+    ([],[]) (placePieceMarkers [] [] W))
+ppmTestWhite = TestCase (assertEqual "for (placePieceMarkers [] [[W,W],[X,X,X],[B,B]] W),"
+    ([[(Marker 1),(Marker 2)],[X,X,X],[B,B]],[(0,0),(0,1)]) (placePieceMarkers [] [[W,W],[X,X,X],[B,B]] W))
+ppmTestBlack = TestCase (assertEqual "for (placePieceMarkers [] [[W,X,B]] B),"
+    ([[W,X,(Marker 1)]],[(0,2)]) (placePieceMarkers [] [[W,X,B]] B))
 
-gdsTests = TestList []
-gdslTests = TestList []
+ppmhTests = TestList [
+    TestLabel "placePieceMarkersHelper test 1" ppmhTestBase,
+    TestLabel "placePieceMarkersHelper test 2" ppmhTestMore
+    ]
+
+ppmhTestBase = TestCase (assertEqual "for (placePieceMarkersHelper [] [[W,X,B]] [[W,X,B]] B 2 (0,0)),"
+    [[W,X,(Marker 2)]] (placePieceMarkersHelper [] [[W,X,B]] [[W,X,B]] B 2 (0,0)))
+ppmhTestMore = TestCase (assertEqual "for (placePieceMarkersHelper [] [[W,X,B]] [[W,X,B]] B 2 (0,0)),"
+    [[X,W],[W,X,(Marker 2)],[X,(Marker 3)]] (placePieceMarkersHelper [] [[X,W],[W,X,B],[X,B]] [[X,W],[W,X,B],[X,B]] B 2 (0,0)))
+
+ppmlTests = TestList [
+    TestLabel "placePieceMarkersLine test 1" ppmlTestCase
+    ]
+
+ppmlTestCase = TestCase (assertEqual "for (placePieceMarkersLine [] [W,X,X,B,X,X,B] [W,X,X,B,X,X,B] B 4 (0,0)),"
+    [X,(Marker 4),X] (placePieceMarkersLine [] [[W,X],[X,B,X],[X,B]] [X,B,X] B 4 (1,0)))
+
+gdsTests = TestList [
+    TestLabel "getDisplayString test 1" gdsTestCase
+    ]
+
+gdsTestCase = TestCase (assertEqual "for (getDisplayString [[W,W],[X,X,X],[B,B]] 1)," " W W \n- - - \n B B \n" (getDisplayString [[W,W],[X,X,X],[B,B]] 1))
+
+gdslTests = TestList [
+    TestLabel "getDisplayStringLine test 1" gdslTestCase
+    ]
+
+gdslTestCase = TestCase (assertEqual "for (getDisplayStringLine [W,B,X,P,(Marker 8)])," "W B - P 8 " (getDisplayStringLine [W,B,X,P,(Marker 8)]))
 
 dmTests = TestList [
     TestLabel "doMove test 1" dmTestW1,
     TestLabel "doMove test 2" dmTestB2
-
     ]
 
 dmTestW1 = TestCase (assertEqual "for (doMove [[X, W]] (1, 2) (1, 1))," [[W, X]] (doMove [[X, W]] (0, 1) (0, 0)))
@@ -349,18 +379,46 @@ gmTests = TestList [
     ]
 
 gmTestSingle = TestCase (assertEqual "for (gmTestSingle [] [[W, X]] (0, 0)),"
-    ([[(Marker 1), X]], [(0, 1)]) 
-    (getMoves [] [[W, X]] (0, 0)))
+    ([[W,W],[(Marker 1),(Marker 2),X],[B,B]], [(1,0),(1,1)])
+    (getMoves [] [[W,W],[X,X,X],[B,B]] (0, 0)))
 gmTestMulti = TestCase (assertEqual "for (gmTestMulti [] [[X, X], [X, W, X], [X, X]] (2, 2)),"
-    ([[X, X], [X, W, X], [X, X]], [(0, 0), (0, 1), (1, 0), (1, 2), (2, 0), (2, 1)])
-    (getMoves [] [[X, X], [X, W, X], [X, X]] (2, 2)))
+    ([[(Marker 1), (Marker 2)], [(Marker 3), W, (Marker 4)], [(Marker 5), (Marker 6)]],
+        [(0, 0), (0, 1), (1, 0), (1, 2), (2, 0), (2, 1)])
+    (getMoves [] [[X, X], [X, W, X], [X, X]] (1, 1)))
 
-gmlTests = TestList []
-gmsTests = TestList []
-gsTests = TestList []
-gslTests = TestList []
-gssTests = TestList []
+gmlTests = TestList [
+    TestLabel "getMovesLoop test 1" gmlTestCase
+    ]
 
+gmlTestCase = TestCase (assertEqual "for (getMovesLoop [[X,X],[W,W,B],[X,X]] 1 [(0,0),(0,1),(2,0),(2,1)]),"
+    [[(Marker 1),(Marker 2)],[W,W,B],[(Marker 3),(Marker 4)]](getMovesLoop [[X,X],[W,W,B],[X,X]] 1 [(0,0),(0,1),(2,0),(2,1)]))
+
+gmsTests = TestList [
+    TestLabel "getMovesLoop test 1" gmsTestCase
+    ]
+
+gmsTestCase = TestCase (assertEqual "for (getMoveSpaces [] [[X,X],[W,W,B],[X,B]] (1,1))," [(0,0),(0,1),(2,0)] (getMoveSpaces [] [[X,X],[W,W,B],[X,B]] (1,1)))
+
+gsTests = TestList [
+    TestLabel "getMovesLoop test 1" gsTestCase
+    ]
+
+gsTestCase = TestCase (assertEqual "for (getStomps [] [[W,X],[X,X,X],[X,B]] W (0,0)),"
+    ([[W,X],[X,X,X],[X,(Marker 1)]], [(2,1)]) (getStomps [] [[W,X],[X,X,X],[X,B]] W (0,0)))
+
+gslTests = TestList [
+    TestLabel "getMovesLoop test 1" gslTestCase
+    ]
+
+gslTestCase = TestCase (assertEqual "for (getStompsLoop [[W,X],[X,X,X],[X,B]] W 1 [(2,1)]),"
+    [[W,X],[X,X,X],[X,(Marker 1)]] (getStompsLoop [[W,X],[X,X,X],[X,B]] W 1 [(2,1)]))
+
+gssTests = TestList [
+    TestLabel "getMovesLoop test 1" gssTestCase
+    ]
+
+gssTestCase = TestCase (assertEqual "for (getStompSpaces [] [[W,W],[X,X,X],[X,B]] W (0,0)),"
+    [(2,1)] (getStompSpaces [] [[W,W],[X,X,X],[X,B]] W (0,0)))
 
 vtsTests = TestList [
     TestLabel "validateSpaces test 1" vtsTestEmpty,
